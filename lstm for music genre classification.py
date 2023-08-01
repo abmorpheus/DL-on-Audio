@@ -30,11 +30,6 @@ def prepare_datasets(test_size, val_size):
     # create train val split
     x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size = val_size, random_state = 42)
 
-    # create 3d array
-    x_train = x_train[..., np.newaxis] # 4d array => (num_samples, 130, 13, 1); last dimension = depth
-    x_test = x_test[..., np.newaxis]
-    x_val = x_val[..., np.newaxis]
-
     return x_train, x_val, x_test, y_train, y_val, y_test
 
 
@@ -43,24 +38,12 @@ def build_model(input_shape):
     # create model
     model = keras.Sequential()
     
-    # 1st conv layer
-    model.add(keras.layers.Conv2D(filters = 32, kernel_size = (3, 3), activation = 'relu', input_shape = input_shape))
-    model.add(keras.layers.MaxPooling2D(pool_size = (3, 3), strides = (2, 2), padding = 'same'))
-    model.add(keras.layers.BatchNormalization())
+    # 2 LSTM layers
+    model.add(keras.layers.LSTM(units = 64, input_shape = input_shape, return_sequences = True))
+    model.add(keras.layers.LSTM(units = 64))
 
-    # 2nd conv layer
-    model.add(keras.layers.Conv2D(filters = 32, kernel_size = (3, 3), activation = 'relu', input_shape = input_shape))
-    model.add(keras.layers.MaxPooling2D(pool_size = (3, 3), strides = (2, 2), padding = 'same'))
-    model.add(keras.layers.BatchNormalization())
-
-    # 3rd conv layer
-    model.add(keras.layers.Conv2D(filters = 32, kernel_size = (2, 2), activation = 'relu', input_shape = input_shape))
-    model.add(keras.layers.MaxPooling2D(pool_size = (2, 2), strides = (2, 2), padding = 'same'))
-    model.add(keras.layers.BatchNormalization())
-
-    # flatten the output and feed it into dense layer
-    model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(64, activation = 'relu'))
+    # dense layer
+    model.add(keras.layers.Dense(units = 64, activation = 'relu'))
     model.add(keras.layers.Dropout(0.3))
 
     # output layer
@@ -120,7 +103,7 @@ if __name__ == '__main__':
     print('\n\n')
 
     # build cnn architecture
-    input_shape = (x_train.shape[1], x_train.shape[2], x_train.shape[3])
+    input_shape = (x_train.shape[1], x_train.shape[2])
     model = build_model(input_shape)
 
     # compile model
@@ -138,7 +121,7 @@ if __name__ == '__main__':
               batch_size = 32)
     
     # model results
-    # loss: 0.7917 - accuracy: 0.7237
+    # loss: 0.9007 - accuracy: 0.6987 - val_loss: 1.0770 - val_accuracy: 0.6408
     
     plot_history(history)
 
